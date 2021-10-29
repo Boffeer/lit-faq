@@ -9,6 +9,7 @@ import {LitElement, html, css} from 'lit';
  * - [ ] Наполнение вставкой компонента question и answer
  * - [ ] Размеры по умолчанию отталкиваются от шрифта
  *
+ * 
  */
 
 
