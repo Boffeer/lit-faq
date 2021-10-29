@@ -8,8 +8,6 @@ import {LitElement, html, css} from 'lit';
  * - [ ] Возможность выбирать цвет кнопки закрыть
  * - [ ] Наполнение вставкой компонента question и answer
  * - [ ] Размеры по умолчанию отталкиваются от шрифта
- * - [ ] Должна быть возможность передать объект со стилями в каждый из элементов 1 раз на этапе инициализации
- *
  *
  */
 
@@ -23,74 +21,67 @@ export class FaqDropdown extends LitElement {
   }
   render() {
     return html`
-      <article data-height=${this.maxAnswerHeight} class="bo-faq ${this.openedState}">
-        <div @click=${this.toggleFaq} class="bo-faq-question">
-          <h3 class="bo-faq-question__name">${this.question}</h3>
+      <article
+        itemscope
+        itemtype="http://schema.org/Question"
+        class="bo-faq ${this.openedState}"
+      >
+        <div
+          @click=${this.toggleFaq}
+          class="bo-faq-question"
+        >
+          <h3
+            itemprop="name"
+            class="bo-faq-question__name"
+          >${this.question}</h3>
           <button class="bo-faq-question__closer">×</button>
         </div>
-        <div class="bo-faq-answer">
-          ${this.answer}
+        <div
+          itemprop="acceptedAnswer"
+          itemscope
+          itemtype="http://schema.org/Answer"
+          class="bo-faq-answer"
+        >
+          <p class="bo-faq-answer__text">${this.answer}</p>
         </div>
       </article>
     `;
   }
-
-  firstUpdated() {
-    this.maxAnswerHeight = this.shadowRoot.querySelector('.bo-faq-answer').getClientRects()[0].height;
-    const ANSWER = this.shadowRoot.querySelector('.bo-faq-question');
-    if (this.isOpened) {
-      ANSWER.click();
-      ANSWER.click();
-      console.log('opened')
-    } else {
-      ANSWER.click();
-      console.log('closed')
+  static get properties() {
+    return {
+      isOpened: {attribute: 'is-opened'},
+      question: {attribute: 'question'},
+      answer: {attribute: 'answer'},
     }
-
   }
 
-  foldFaq(ANSWER, answerHeight) {
-    if (this.isOpened) {
-      this.openedState = this.openedClass;
-      this.isOpened = !this.isOpened;
-
-      for (let currentHeight = answerHeight; currentHeight != 0; --currentHeight) {
-        ANSWER.style.height = `${currentHeight}px`;
-      }
+  firstUpdated() {
+    const ANSWER = this.shadowRoot.querySelector('.bo-faq-question');
+    if (this.isOpened === "true") {
+      ANSWER.click()
     } else {
-      this.openedState = '';
-      this.isOpened = !this.isOpened;
-
-      for (let currentHeight = 0; currentHeight < this.maxAnswerHeight; ++currentHeight) {
-        ANSWER.style.height = `${currentHeight}px`;
-      }
     }
   }
 
   toggleFaq() {
-    const ANSWER = this.shadowRoot.querySelector('.bo-faq-answer');
-    let answerHeight = this.maxAnswerHeight + 0;
-
-    this.foldFaq(ANSWER, answerHeight);
-
-
+    if (this.isOpened) {
+      this.openedState = this.openedClass;
+      this.isOpened = !this.isOpened;
+    } else {
+      this.openedState = '';
+      this.isOpened = !this.isOpened;
+    }
   }
 }
 
-FaqDropdown.properties = {
-    isOpened: {attribute: 'is-opened'},
-    question: {attribute: 'question'},
-    answer: {attribute: 'answer'},
-    // maxAnswerHeight: 0
-}
 
 FaqDropdown.styles = css`
   .bo-faq {
     width: 100%;
     position: relative;
+    border-bottom: 1px solid var(--bo-question-border, #dfdfdf);
   }
   .bo-faq.opened {
-    background: red;
   }
   .bo-faq-question {
     width: 100%;
@@ -98,34 +89,61 @@ FaqDropdown.styles = css`
     align-items: center;
     font-family: inherit, "Arial", "Helvetica", sans-serif;
     cursor: pointer;
+    background-color: var(--bo-question-bg, transparent);
+    position: relative;
+  }
+  :host:first-child .bo-faq-question {
+    border-top: var(--bo-question-border-width, 1px) solid var(--bo-question-border, #dfdfdf);
   }
   .bo-faq-question__name {
+    font-size: var(--bo-question-fz, 24px);
     width: calc(100% - 50px);
+    margin-top: var(--bo-question-mt, 1.5rem);
+    margin-bottom: var(--bo-question-mb, 1rem);
   }
   .bo-faq-question__closer {
-    width: 30px;
-    height: 30px;
+    width: var(--bo-question-closer-size, 30px);
+    height: var(--bo-question-closer-size, 30px);
     font-family: "Arial", "Helvetica", sans-serif;
     font-weight: 700;
     font-size: 20px;
     position: absolute;
-    top: 10px;
+    top: 50%;
     right: 10px;
     cursor: pointer;
     border: none;
     border-radius: 100%;
-    color: #fff;
-    transform: rotate(45deg);
+    color: var(--bo-question-closer-color,#ffffff);
+    background: var(--bo-question-closer-bg, #dfdfdf);
+    transform: rotate(45deg) translateY(-50%);
     transition: 0.3s all;
   }
   .bo-faq.opened .bo-faq-question__closer {
-    transform: none;
+    right: 0px;
+    transform: translateY(-50%);
   }
   .bo-faq-answer {
-    padding-top: 10px;
+    padding: 0;
+    margin: auto;
     overflow: hidden;
-    height:auto;
-    transition: 0.3s all;
+    height: 0;
+    padding: 0;
+    opacity: 0;
+    visibility: hidden;
+    overflow: hidden;
+    transition: 0.2s all linear;
+    background-color: var(--bo-answer-bg, transparent);
+  }
+  .bo-faq.opened .bo-faq-answer {
+    padding: var(--bo-answer-padding, 1px 15px 15px 20px);
+    opacity: 1;
+    visibility: visible;
+    height: auto;
+    overflow: none;
+  }
+  .bo-faq-answer__text {
+    transition: 0.2s all linear;
+    font-size: var(--bo-answer-fz, 16px);
   }
 `;
 
